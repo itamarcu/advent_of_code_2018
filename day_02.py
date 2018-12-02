@@ -19,7 +19,7 @@ def solve_a(input_file_lines: List[str]) -> str:
 def solve_b(input_file_lines: List[str]) -> str:
     for id1 in input_file_lines:
         for id2 in input_file_lines:
-            diff = [bool(ord(c1)-ord(c2)) for c1, c2 in zip(id1, id2)]
+            diff = [c1 != c2 for c1, c2 in zip(id1, id2)]
             if sum(diff) != 1:
                 continue
             for i in range(len(diff)):
