@@ -7,25 +7,21 @@ def solve_a(input_file_lines: List[str]) -> str:
 
 
 def will_react(polymer, i, j):
-    c1 = polymer[i]
-    c2 = polymer[j]
-    return c1.lower() == c2.lower() and c1 != c2
+    return abs(ord(polymer[i]) - ord(polymer[j])) == 32  # 32 == ord("A")-ord("a")
 
 
 def react(polymer):
     i = 0
     while i < len(polymer) - 1:
         i += 1
-        clump_size = 1
-        while clump_size <= i and i + clump_size - 1 < len(polymer):
-            if will_react(polymer, i + clump_size - 1, i - clump_size):
-                clump_size += 1
-            else:
-                break
-        clump_size -= 1
+        clump_size = 0
+        while clump_size < i \
+                and i + clump_size < len(polymer) \
+                and will_react(polymer, i + clump_size, i - clump_size - 1):
+            clump_size += 1
         if clump_size > 0:
             polymer = polymer[:i - clump_size] + polymer[i + clump_size:]
-            i -= clump_size + 1
+            i -= clump_size + 1  # to retry clumping with last unclumped letter
     return polymer
 
 
