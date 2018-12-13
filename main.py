@@ -1,8 +1,8 @@
-import day_12
+import day_13
 
-with open("input_12") as file:
+with open("input_13") as file:
     input_file_lines = file.readlines()
-    input_file_lines = [x.strip() for x in input_file_lines]
+    input_file_lines = [x for x in input_file_lines]  # no strip!
 
-print(day_12.solve_a(input_file_lines))
-print(day_12.solve_b(input_file_lines))
+print(day_13.solve_a(input_file_lines))
+print(day_13.solve_b(input_file_lines))
