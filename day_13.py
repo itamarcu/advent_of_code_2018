@@ -20,7 +20,7 @@ def setup() -> Tuple[Dict[complex, str], List[Cart]]:
             if char in "<v>^":
                 direction = {
                     "<": -1,
-                    "v": +1j,
+                    "v": +1j,  # positive Y is downwards
                     ">": +1,
                     "^": -1j,
                 }[char]
@@ -39,20 +39,23 @@ def setup() -> Tuple[Dict[complex, str], List[Cart]]:
 
 
 def turn_cart(cart: Cart, part: str):
+    """This space uses a downwards-facing Y axis, which means all calculations
+    must flip their imaginary part. For example, rotation to the left
+    (counterclockwise) would be multiplying by -1j instead of by +1j."""
     if not part:  # empty track is impossible, and | or - don't matter
         return
     if part == "\\":
         if cart.direction.real == 0:
-            cart.direction *= -1j  # ↑↖←
+            cart.direction *= -1j  # ⮡ ⮢
         else:
-            cart.direction *= +1j  # ←↖↑
+            cart.direction *= +1j  # ⮧ ⮤
     if part == "/":
         if cart.direction.real == 0:
-            cart.direction *= +1j
+            cart.direction *= +1j  # ⮣ ⮠
         else:
-            cart.direction *= -1j
+            cart.direction *= -1j  # ⮥ ⮦
     if part == "+":
-        cart.direction *= -1j * 1j ** cart.cross_mod
+        cart.direction *= -1j * 1j ** cart.cross_mod  # rotate left, forward, or right
         cart.cross_mod = (cart.cross_mod + 1) % 3
 
 
