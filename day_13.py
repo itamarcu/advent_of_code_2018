@@ -1,22 +1,22 @@
-from typing import List
+from collections import defaultdict
+from typing import List, Tuple, Dict
 
 
 class Cart:
-    def __init__(self, loc: complex, di: complex, cr: int, index):
-        self.loc = loc
-        self.di = di
-        self.cr = cr
-        self.index = index
+    def __init__(self, pos: complex, di: complex):
+        self.position = pos
+        self.direction = di
+        self.cross_mod = 0
         self.dead = False
 
 
-def solve_a(input_file_lines: List[str]) -> str:
-    mapp = {}
+def setup() -> Tuple[Dict[complex, str], List[Cart]]:
+    with open("input_13") as file:
+        input_file_lines = file.readlines()  # no strip!
+    tracks = defaultdict(lambda: "")  # only stores important tracks: \ / +
     carts = []
     for y, line in enumerate(input_file_lines):
         for x, char in enumerate(line):
-            if char == "\n":
-                continue
             if char in "<v>^":
                 direction = {
                     "<": -1,
@@ -24,7 +24,7 @@ def solve_a(input_file_lines: List[str]) -> str:
                     ">": +1,
                     "^": -1j,
                 }[char]
-                carts.append(Cart(x + y * 1j, direction, 0, len(carts)))  # location, direction, crossings
+                carts.append(Cart(x + y * 1j, direction))  # location, direction, crossings
                 part = {
                     "<": "-",
                     "v": "|",
@@ -33,88 +33,62 @@ def solve_a(input_file_lines: List[str]) -> str:
                 }[char]
             else:
                 part = char
-            mapp[(x + y * 1j)] = part
-    tick = 0
+            if part in "\\/+":
+                tracks[(x + y * 1j)] = part
+    return tracks, carts
+
+
+def turn_cart(cart: Cart, part: str):
+    if not part:  # empty track is impossible, and | or - don't matter
+        return
+    if part == "\\":
+        if cart.direction.real == 0:
+            cart.direction *= -1j  # ↑↖←
+        else:
+            cart.direction *= +1j  # ←↖↑
+    if part == "/":
+        if cart.direction.real == 0:
+            cart.direction *= +1j
+        else:
+            cart.direction *= -1j
+    if part == "+":
+        cart.direction *= -1j * 1j ** cart.cross_mod
+        cart.cross_mod = (cart.cross_mod + 1) % 3
+
+
+def solve_a() -> str:
+    tracks, carts = setup()
     while True:
-        tick += 1
-        carts.sort(key=lambda c: (c.loc.imag, c.loc.real))
-        for cart in carts:
-            cart.loc += cart.di
-            if any(c2.loc == cart.loc for c2 in carts if c2.index != cart.index):
-                return str(int(cart.loc.real)) + "," + str(int(cart.loc.imag))
-            part = mapp[cart.loc]
-            if part == "\\":
-                if cart.di.real == 0:
-                    cart.di *= -1j  # ↑↖←
-                else:
-                    cart.di *= +1j  # ←↖↑
-            if part == "/":
-                if cart.di.real == 0:
-                    cart.di *= +1j
-                else:
-                    cart.di *= -1j
-            if part == "+":
-                cart.di *= -1j * 1j ** cart.cr
-                cart.cr = (cart.cr + 1) % 3
+        carts.sort(key=lambda c: (c.position.imag, c.position.real))
+        for ci, cart in enumerate(carts):
+            cart.position += cart.direction
+            if any(c2.position == cart.position for c2i, c2 in enumerate(carts) if c2i != ci):
+                return str(int(cart.position.real)) + "," + str(int(cart.position.imag))
+                # 14, 42
+            part = tracks[cart.position]
+            turn_cart(cart, part)
 
 
-
-def solve_b(input_file_lines: List[str]) -> str:
-    mapp = {}
-    carts = []
-    for y, line in enumerate(input_file_lines):
-        for x, char in enumerate(line):
-            if char == "\n":
-                continue
-            if char in "<v>^":
-                direction = {
-                    "<": -1,
-                    "v": +1j,
-                    ">": +1,
-                    "^": -1j,
-                }[char]
-                carts.append(Cart(x + y * 1j, direction, 0, len(carts)))  # location, direction, crossings
-                part = {
-                    "<": "-",
-                    "v": "|",
-                    ">": "-",
-                    "^": "|",
-                }[char]
-            else:
-                part = char
-            mapp[(x + y * 1j)] = part
-    tick = 0
-    while True:
-        tick += 1
-        carts.sort(key=lambda c: (c.loc.imag, c.loc.real))
-        for ci in range(len(carts)):
-            cart = carts[ci]
+def solve_b() -> str:
+    tracks, carts = setup()
+    while len(carts) > 1:
+        carts.sort(key=lambda c: (c.position.imag, c.position.real))
+        for ci, cart in enumerate(carts):
             if cart.dead:
                 continue
-            cart.loc += cart.di
-            for ci2 in range(len(carts)):
-                if ci != ci2 and cart.loc == carts[ci2].loc and not carts[ci2].dead:
-                    print("BOOM!", cart.index, carts[ci2].index)
+            cart.position += cart.direction
+            for ci2, cart2 in enumerate(carts):
+                if ci != ci2 and cart.position == cart2.position and not cart2.dead:
                     cart.dead = True
-                    carts[ci2].dead = True
+                    cart2.dead = True
+                    break
             if cart.dead:
                 continue
-            part = mapp[cart.loc]
-            if part == "\\":
-                if cart.di.real == 0:
-                    cart.di *= -1j  # ↑↖←
-                else:
-                    cart.di *= +1j  # ←↖↑
-            if part == "/":
-                if cart.di.real == 0:
-                    cart.di *= +1j
-                else:
-                    cart.di *= -1j
-            if part == "+":
-                cart.di *= -1j * 1j ** cart.cr
-                cart.cr = (cart.cr + 1) % 3
+            part = tracks[cart.position]
+            turn_cart(cart, part)
         carts = [c for c in carts if not c.dead]
-        print(len(carts))
-        if len(carts) == 1:
-            cart = carts[0]
-            return str(int(cart.loc.real)) + "," + str(int(cart.loc.imag))
+    if not carts:
+        return "ERROR: there's an even number of carts, there's isn't 1 cart left at the end!"
+    cart = carts[0]
+    return str(int(cart.position.real)) + "," + str(int(cart.position.imag))
+    # 8,7
