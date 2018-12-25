@@ -1,13 +1,15 @@
 from collections import defaultdict
-from typing import List
+from typing import List, Sequence
+
 from helpful import UnionFind
 
 
-def dist(coords1, coords2):
+def dist(coords1: Sequence[int], coords2: Sequence[int]):
+    assert len(coords1) == len(coords2)
     return sum([abs(coords1[i] - coords2[i]) for i in range(len(coords1))])
 
 
-def solve_a(input_file_lines: List[str]) -> str:
+def solve_a_slower(input_file_lines: List[str]) -> str:
     all_coords = []
     unions = UnionFind()
     for line in input_file_lines:
@@ -21,8 +23,11 @@ def solve_a(input_file_lines: List[str]) -> str:
         union_counts[unions[coords]] += 1
 
     constellation_count = len(union_counts.keys())
-
     return str(constellation_count)
+
+
+def solve_a(input_file_lines: List[str]) -> str:
+    return solve_a_slower(input_file_lines)
 
 
 def solve_b(input_file_lines: List[str]) -> str:
